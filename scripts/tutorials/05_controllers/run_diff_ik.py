@@ -21,7 +21,7 @@ PhysX. This helps perform parallelized computation of the inverse kinematics.
 import argparse
 
 from isaaclab.app import AppLauncher
-
+from ipdb import set_trace
 # add argparse arguments
 parser = argparse.ArgumentParser(description="Tutorial on using the differential IK controller.")
 parser.add_argument("--robot", type=str, default="franka_panda", help="Name of the robot.")

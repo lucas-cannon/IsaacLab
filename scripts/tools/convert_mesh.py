@@ -127,7 +127,7 @@ def main():
         usd_dir=os.path.dirname(dest_path),
         usd_file_name=os.path.basename(dest_path),
         make_instanceable=args_cli.make_instanceable,
-        collision_approximation=args_cli.collision_approximation,
+        # collision_approximation=args_cli.collision_approximation,
     )
 
     # Print info
