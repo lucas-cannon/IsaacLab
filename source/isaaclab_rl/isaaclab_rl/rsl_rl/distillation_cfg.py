@@ -65,6 +65,15 @@ class RslRlDistillationStudentTeacherRecurrentCfg(RslRlDistillationStudentTeache
     teacher_recurrent: bool = MISSING
     """Whether the teacher network is recurrent too."""
 
+@configclass
+class RslRlDistillationStudentTeacherCNNCfg(RslRlDistillationStudentTeacherCfg):
+    """Configuration for the distillation student-teacher CNN networks."""
+
+    class_name: str = "StudentTeacherCNN"
+    """The policy class name. Default is StudentTeacherCNN."""
+
+    student_cnn_cfg: dict[str, dict] | dict | None = None
+    """The CNN configuration for the student network."""
 
 ############################
 # Algorithm configurations #
