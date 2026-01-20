@@ -4,7 +4,7 @@ from isaaclab.assets.articulation import ArticulationCfg
 # from isaaclab.utils.assets import ISAAC_NUCLEUS_DIR, ISAACLAB_NUCLEUS_DIR
 
 
-def make_ur5_tactip_cfg(usd_path: str) -> ArticulationCfg:
+def make_ur5_tactip_cfg(usd_path: str, activate_contact_sensors: bool = False) -> ArticulationCfg:
     return ArticulationCfg(
         spawn=sim_utils.UsdFileCfg(
             usd_path=usd_path,
@@ -12,7 +12,7 @@ def make_ur5_tactip_cfg(usd_path: str) -> ArticulationCfg:
                 disable_gravity=True,
                 max_depenetration_velocity=5.0,
             ),
-            activate_contact_sensors=False,
+            activate_contact_sensors=activate_contact_sensors,
             articulation_props=sim_utils.ArticulationRootPropertiesCfg(
                 enabled_self_collisions=False,
                 solver_position_iteration_count=16,
@@ -58,5 +58,6 @@ UR5_TACTIP_CFG = make_ur5_tactip_cfg(
 )
 
 UR5_RA_TACTIP_CFG = make_ur5_tactip_cfg(
-    "/home/bourne/IsaacLab/source/isaaclab_assets/data/Robots/tg3_asset/right_angle_tactip.usd"
+    "/home/bourne/IsaacLab/source/isaaclab_assets/data/Robots/tg3_asset/right_angle_tactip.usd",
+    activate_contact_sensors=True
 )
