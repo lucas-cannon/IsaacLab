@@ -75,6 +75,28 @@ class RslRlDistillationStudentTeacherCNNCfg(RslRlDistillationStudentTeacherCfg):
     student_cnn_cfg: dict[str, dict] | dict | None = None
     """The CNN configuration for the student network."""
 
+@configclass
+class RslRlDistillationStudentTeacherCNNRNNCfg(RslRlDistillationStudentTeacherCfg):
+    """Configuration for the distillation student-teacher CNN networks."""
+
+    class_name: str = "StudentTeacherCNNRNN"
+    """The policy class name. Default is StudentTeacherCNNRNN."""
+
+    student_cnn_cfg: dict[str, dict] | dict | None = None
+    """The CNN configuration for the student network."""
+
+    rnn_type: str = MISSING
+    """The type of the RNN network. Either "lstm" or "gru"."""
+
+    rnn_hidden_dim: int = MISSING
+    """The hidden dimension of the RNN network."""
+
+    rnn_num_layers: int = MISSING
+    """The number of layers of the RNN network."""
+
+    teacher_recurrent: bool = MISSING
+    """Whether the teacher network is recurrent too."""
+
 ############################
 # Algorithm configurations #
 ############################
