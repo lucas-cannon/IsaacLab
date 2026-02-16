@@ -46,6 +46,22 @@ class RslRlPpoActorCriticCfg:
     activation: str = MISSING
     """The activation function for the actor and critic networks."""
 
+@configclass
+class RslRlActorCriticExtrinsicsCfg(RslRlPpoActorCriticCfg):
+    """Configuration for PPO actor-critic with privileged extrinsics encoder (Stage 1)."""
+
+    class_name: str = "ActorCriticExtrinsics"
+    """Policy class name."""
+
+    # ---- Extrinsics encoder ----
+    extrinsics_output_dims: int = MISSING
+    """Dimension of the latent extrinsics vector."""
+
+    priv_obs_normalization: bool = MISSING
+    """Whether to normalize the privileged observation for the extrinsics encoder."""
+    
+    extrinsics_hidden_dims: tuple[int] | list[int] = (256, 256, 256)
+    """Hidden layer sizes for the extrinsics encoder MLP."""
 
 @configclass
 class RslRlPpoActorCriticRecurrentCfg(RslRlPpoActorCriticCfg):
