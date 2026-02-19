@@ -24,13 +24,21 @@ class RslRlExtrinsicsDistillationStudentTeacherCfg:
 
     actor_obs_normalization: bool = MISSING
     priv_obs_normalization: bool = MISSING
-    student_obs_normalization: bool = MISSING
+    student_1d_obs_normalization: bool = MISSING
 
     actor_hidden_dims: list[int] = MISSING
     teacher_extrinsics_hidden_dims: list[int] = MISSING
 
     activation: str = MISSING
+    # teacher_tanh_extrinsics: bool = False
 
+@configclass
+class RslRlExtrinsicsMultiModalDistillationStudentTeacherCfg(RslRlExtrinsicsDistillationStudentTeacherCfg):
+    """Configuration for extrinsics distillation student-teacher network."""
+
+    class_name: str = "StudentTeacherMultiModalExtrinsics"
+
+    student_cnn_cfg: dict[str, dict] | dict | None = None
 
 ############################
 # Algorithm configurations #
@@ -61,3 +69,10 @@ class RslRlExtrinsicsDistillationRunnerCfg(RslRlBaseRunnerCfg):
 
     policy: RslRlExtrinsicsDistillationStudentTeacherCfg = MISSING
     algorithm: RslRlExtrinsicsDistillationAlgorithmCfg = MISSING
+
+
+@configclass
+class RslRlExtrinsicsMultiModalDistillationRunnerCfg(RslRlExtrinsicsDistillationRunnerCfg):
+    """Configuration for extrinsics distillation runner."""
+
+    policy: RslRlExtrinsicsMultiModalDistillationStudentTeacherCfg = MISSING

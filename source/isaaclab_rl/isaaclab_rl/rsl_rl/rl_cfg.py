@@ -47,7 +47,7 @@ class RslRlPpoActorCriticCfg:
     """The activation function for the actor and critic networks."""
 
 @configclass
-class RslRlActorCriticExtrinsicsCfg(RslRlPpoActorCriticCfg):
+class RslRlActorCriticExtrinsicsCfg(RslRlPpoActorCriticCfg):  # stage 1
     """Configuration for PPO actor-critic with privileged extrinsics encoder (Stage 1)."""
 
     class_name: str = "ActorCriticExtrinsics"
@@ -62,6 +62,9 @@ class RslRlActorCriticExtrinsicsCfg(RslRlPpoActorCriticCfg):
     
     extrinsics_hidden_dims: tuple[int] | list[int] = (256, 256, 256)
     """Hidden layer sizes for the extrinsics encoder MLP."""
+
+    last_activation: str | None = None
+    # """Whether to apply Tanh activation to the output of the extrinsics encoder."""
 
 @configclass
 class RslRlPpoActorCriticRecurrentCfg(RslRlPpoActorCriticCfg):
