@@ -383,6 +383,68 @@ class randomize_rigid_body_mass(ManagerTermBase):
             self.asset.root_physx_view.set_inertias(inertias, env_ids)
 
 
+class randomize_rigid_body_com_non_accumulation(ManagerTermBase):
+    """
+    Randomize center of mass without accumulation.
+    """
+    def __init__(self, cfg, env):
+        super().__init__(cfg, env)
+
+        self.asset_cfg: SceneEntityCfg = cfg.params["asset_cfg"]
+        self.asset = env.scene[self.asset_cfg.name]
+        # Cache default COM ONCE
+        self._default_com = (
+            self.asset.root_physx_view.get_coms().clone()
+        )
+
+    def __call__(
+        self,
+        env,
+        env_ids: torch.Tensor | None,
+        asset_cfg: SceneEntityCfg,
+        com_range: dict[str, tuple[float, float]],
+    ):
+
+        if env_ids is None:
+            env_ids = torch.arange(env.scene.num_envs, device="cpu")
+        else:
+            env_ids = env_ids.cpu()
+
+        if self.asset_cfg.body_ids == slice(None):
+            body_ids = torch.arange(self.asset.num_bodies, dtype=torch.int, device="cpu")
+        else:
+            body_ids = torch.tensor(self.asset_cfg.body_ids, dtype=torch.int, device="cpu")
+
+        # sample offsets
+        range_list = [com_range.get(k, (0.0, 0.0)) for k in ["x", "y", "z"]]
+        ranges = torch.tensor(range_list, device="cpu")
+
+        rand_samples = torch.empty(len(env_ids), 3, device="cpu")
+        rand_samples[:, 0].uniform_(*ranges[0])
+        rand_samples[:, 1].uniform_(*ranges[1])
+        rand_samples[:, 2].uniform_(*ranges[2])
+
+        # ALWAYS start from default
+        coms = self._default_com.clone()
+
+        if coms.dim() == 3:
+            coms[env_ids[:, None], body_ids, :3] = (
+                self._default_com[env_ids[:, None], body_ids, :3]
+                + rand_samples.unsqueeze(1)
+            )
+
+        elif coms.dim() == 2:
+            coms[env_ids, :3] = (
+                self._default_com[env_ids, :3]
+                + rand_samples
+            )
+
+        else:
+            raise RuntimeError(f"Unexpected COM tensor shape: {coms.shape}")
+
+        self.asset.root_physx_view.set_coms(coms, env_ids)
+
+
 def randomize_rigid_body_com(
     env: ManagerBasedEnv,
     env_ids: torch.Tensor | None,
