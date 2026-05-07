@@ -299,3 +299,19 @@ class RslRlOnPolicyRunnerCfg(RslRlBaseRunnerCfg):
 
     algorithm: RslRlPpoAlgorithmCfg = MISSING
     """The algorithm configuration."""
+
+
+@configclass
+class RslRlOnPolicyCoDesignRunnerCfg(RslRlBaseRunnerCfg):
+    """Configuration of the runner for on-policy algorithms."""
+
+    class_name: str = "OnPolicyCoDesignRunner"
+    """The runner class name. Default is OnPolicyCoDesignRunner."""
+
+    policy: RslRlPpoActorCriticCfg = MISSING
+    """The policy configuration."""
+
+    algorithm: RslRlPpoAlgorithmCfg = MISSING
+    """The algorithm configuration."""
+
+    hardware_iteration: int = 0
