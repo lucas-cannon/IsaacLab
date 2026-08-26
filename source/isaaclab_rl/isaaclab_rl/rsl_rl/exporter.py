@@ -50,6 +50,7 @@ class _TorchPolicyExporter(torch.nn.Module):
     def __init__(self, policy, normalizer=None):
         super().__init__()
         self.is_recurrent = policy.is_recurrent
+        self.squash_actions = getattr(policy, "action_distribution", "normal") == "tanh_normal"
         # copy policy parameters
         if hasattr(policy, "actor"):
             self.actor = copy.deepcopy(policy.actor)
@@ -87,17 +88,20 @@ class _TorchPolicyExporter(torch.nn.Module):
         self.hidden_state[:] = h
         self.cell_state[:] = c
         x = x.squeeze(0)
-        return self.actor(x)
+        actions = self.actor(x)
+        return torch.tanh(actions) if self.squash_actions else actions
 
     def forward_gru(self, x):
         x = self.normalizer(x)
         x, h = self.rnn(x.unsqueeze(0), self.hidden_state)
         self.hidden_state[:] = h
         x = x.squeeze(0)
-        return self.actor(x)
+        actions = self.actor(x)
+        return torch.tanh(actions) if self.squash_actions else actions
 
     def forward(self, x):
-        return self.actor(self.normalizer(x))
+        actions = self.actor(self.normalizer(x))
+        return torch.tanh(actions) if self.squash_actions else actions
 
     @torch.jit.export
     def reset(self):
@@ -123,6 +127,7 @@ class _OnnxPolicyExporter(torch.nn.Module):
         super().__init__()
         self.verbose = verbose
         self.is_recurrent = policy.is_recurrent
+        self.squash_actions = getattr(policy, "action_distribution", "normal") == "tanh_normal"
         # copy policy parameters
         if hasattr(policy, "actor"):
             self.actor = copy.deepcopy(policy.actor)
@@ -154,16 +159,19 @@ class _OnnxPolicyExporter(torch.nn.Module):
         x_in = self.normalizer(x_in)
         x, (h, c) = self.rnn(x_in.unsqueeze(0), (h_in, c_in))
         x = x.squeeze(0)
-        return self.actor(x), h, c
+        actions = self.actor(x)
+        return (torch.tanh(actions) if self.squash_actions else actions), h, c
 
     def forward_gru(self, x_in, h_in):
         x_in = self.normalizer(x_in)
         x, h = self.rnn(x_in.unsqueeze(0), h_in)
         x = x.squeeze(0)
-        return self.actor(x), h
+        actions = self.actor(x)
+        return (torch.tanh(actions) if self.squash_actions else actions), h
 
     def forward(self, x):
-        return self.actor(self.normalizer(x))
+        actions = self.actor(self.normalizer(x))
+        return torch.tanh(actions) if self.squash_actions else actions
 
     def export(self, path, filename):
         self.to("cpu")

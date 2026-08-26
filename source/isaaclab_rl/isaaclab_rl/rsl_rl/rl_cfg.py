@@ -31,6 +31,9 @@ class RslRlPpoActorCriticCfg:
     noise_std_type: Literal["scalar", "log"] = "scalar"
     """The type of noise standard deviation for the policy. Default is scalar."""
 
+    action_distribution: Literal["normal", "tanh_normal"] = "normal"
+    """Action distribution. ``tanh_normal`` produces actions strictly inside [-1, 1]."""
+
     actor_obs_normalization: bool = MISSING
     """Whether to normalize the observation for the actor network."""
 
@@ -181,6 +184,9 @@ class RslRlPpoAlgorithmCfg:
     If True, the advantage is normalized over the mini-batches only.
     Otherwise, the advantage is normalized over the entire collected trajectories.
     """
+
+    normalize_entropy_by_action_dim: bool = False
+    """Normalize entropy by action count before applying its coefficient."""
 
     rnd_cfg: RslRlRndCfg | None = None
     """The RND configuration. Default is None, in which case RND is not used."""

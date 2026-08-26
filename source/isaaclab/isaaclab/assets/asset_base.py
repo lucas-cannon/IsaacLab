@@ -314,6 +314,17 @@ class AssetBase(ABC):
             self._device = SimulationManager.get_physics_sim_device()
             # initialize the asset
             try:
+                # Isaac Sim 5 can deliver an asset's timeline PLAY callback before the
+                # SimulationManager PHYSICS_WARMUP callback has created its tensor view. The
+                # normal SimulationContext.reset() fallback initializes it later, but by then
+                # this callback has already failed and marks the asset initialized. Ensure the
+                # shared view exists at the point every asset actually consumes it.
+                if SimulationManager.get_physics_sim_view() is None:
+                    SimulationManager.initialize_physics()
+                if SimulationManager.get_physics_sim_view() is None:
+                    raise RuntimeError(
+                        "Physics simulation view is unavailable during asset initialization."
+                    )
                 self._initialize_impl()
             except Exception as e:
                 if builtins.ISAACLAB_CALLBACK_EXCEPTION is None:

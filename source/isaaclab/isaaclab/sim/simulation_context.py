@@ -26,6 +26,7 @@ import omni.log
 import omni.physx
 import omni.usd
 from isaacsim.core.api.simulation_context import SimulationContext as _SimulationContext
+from isaacsim.core.simulation_manager import SimulationManager
 from isaacsim.core.utils.carb import get_carb_setting, set_carb_setting
 from isaacsim.core.utils.viewports import set_camera_view
 from isaacsim.core.version import get_version
@@ -583,6 +584,13 @@ class SimulationContext(_SimulationContext):
             exception_to_raise = builtins.ISAACLAB_CALLBACK_EXCEPTION
             builtins.ISAACLAB_CALLBACK_EXCEPTION = None
             raise exception_to_raise
+        if not soft and SimulationManager.get_physics_sim_view() is None:
+            # Isaac Sim 5 can retain ``_warmup_needed=False`` after replacing/opening a stage
+            # even though that stage has no tensor simulation view. In that state the public
+            # initialize_physics() fallback is a no-op and asset PLAY callbacks fail first.
+            # Re-arm warm-up before play so the manager callback (or AssetBase's guarded
+            # fallback) creates the view against the current stage.
+            SimulationManager._warmup_needed = True
         super().reset(soft=soft)
         # app.update() may be changing the cuda device in reset, so we force it back to our desired device here
         if "cuda" in self.device:
