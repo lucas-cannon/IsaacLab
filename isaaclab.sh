@@ -99,19 +99,25 @@ is_docker() {
 ensure_cuda_torch() {
   local pip_command=$(extract_pip_command)
   local pip_uninstall_command=$(extract_pip_uninstall_command)
+  local python_exe=$(extract_python_exe)
   local -r TORCH_VER="2.7.0"
   local -r TV_VER="0.22.0"
   local -r CUDA_TAG="cu128"
   local -r PYTORCH_INDEX="https://download.pytorch.org/whl/${CUDA_TAG}"
   local torch_ver
 
-  if "$pip_command" show torch >/dev/null 2>&1; then
-    torch_ver="$("$pip_command" show torch 2>/dev/null | awk -F': ' '/^Version/{print $2}')"
+  # extract_pip_command includes the ``install`` subcommand, so use the
+  # selected runtime Python directly for package discovery. Treating the
+  # complete command as one quoted executable made detection fail and
+  # installed a duplicate Torch/CUDA stack alongside Isaac Sim's compatible
+  # pip_prebundle.
+  if "${python_exe}" -m pip show torch >/dev/null 2>&1; then
+    torch_ver="$("${python_exe}" -m pip show torch 2>/dev/null | awk -F': ' '/^Version/{print $2}')"
     echo "[INFO] Found PyTorch version ${torch_ver}."
     if [[ "$torch_ver" != "${TORCH_VER}+${CUDA_TAG}" ]]; then
       echo "[INFO] Replacing PyTorch ${torch_ver} → ${TORCH_VER}+${CUDA_TAG}..."
-      "$pip_uninstall_command" torch torchvision torchaudio >/dev/null 2>&1 || true
-      "$pip_command" "torch==${TORCH_VER}" "torchvision==${TV_VER}" --index-url "${PYTORCH_INDEX}"
+      ${pip_uninstall_command} torch torchvision torchaudio >/dev/null 2>&1 || true
+      ${pip_command} "torch==${TORCH_VER}" "torchvision==${TV_VER}" --index-url "${PYTORCH_INDEX}"
     else
       echo "[INFO] PyTorch ${TORCH_VER}+${CUDA_TAG} already installed."
     fi
