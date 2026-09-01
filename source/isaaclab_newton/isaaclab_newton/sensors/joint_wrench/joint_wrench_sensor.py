@@ -9,6 +9,7 @@ import logging
 from collections.abc import Sequence
 from typing import TYPE_CHECKING
 
+import numpy as np
 import warp as wp
 from newton import JointType
 from newton.selection import ArticulationView
@@ -176,9 +177,42 @@ class JointWrenchSensor(BaseJointWrenchSensor):
         # joint_child is per-articulation; topology is identical across envs,
         # so we take the first-env mapping as the 1-D kernel input.
         joint_child_full = self._root_view.get_attribute("joint_child", model)[:, 0]
-        joint_child_np = joint_child_full.numpy()[0]
+        # ``get_attribute`` exposes global model body indices and a max-joint
+        # padded array.  The view's state bindings are sliced to local body
+        # rows, so convert each selected child id through its stable body label
+        # before indexing those bindings.  This matters when another
+        # articulation (the robot in the knob task) precedes the knob in the
+        # Newton model: its first knob body can have global id 11 while its
+        # local view row is 1.
+        global_joint_child = joint_child_full.numpy()[0][: self._num_joints]
+        view_labels = list(self._root_view.link_labels)
+        local_by_label = {str(label): index for index, label in enumerate(view_labels)}
+        joint_child_np = []
+        for body_index in global_joint_child:
+            label = str(model.body_label[int(body_index)])
+            # Labels are environment-scoped.  A view always uses the first
+            # environment as its template, while the suffix is identical for
+            # every replicated environment.
+            local_index = local_by_label.get(label)
+            if local_index is None:
+                suffix = label.rsplit("/", 1)[-1]
+                local_index = next(
+                    (index for index, view_label in enumerate(view_labels)
+                     if str(view_label).rsplit("/", 1)[-1] == suffix),
+                    None,
+                )
+            if local_index is None:
+                raise RuntimeError(
+                    f"Could not map joint child body {body_index} ({label!r}) "
+                    f"into articulation view {view_labels!r}."
+                )
+            joint_child_np.append(local_index)
+        joint_child_np = np.asarray(joint_child_np, dtype=np.int32)
         if not all(0 <= b < self._sim_bind_body_parent_f.shape[1] for b in joint_child_np):
-            raise RuntimeError(f"joint_child contains out-of-range body indices for '{self.cfg.prim_path}'")
+            raise RuntimeError(
+                f"joint_child contains out-of-range body indices for '{self.cfg.prim_path}': "
+                f"values={joint_child_np.tolist()}, body_parent_shape={self._sim_bind_body_parent_f.shape}"
+            )
         self._joint_child = wp.array(joint_child_np, dtype=wp.int32, device=self._device)
 
         link_names = list(self._root_view.link_names)
